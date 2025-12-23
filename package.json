@@ -1,0 +1,16 @@
+{
+  "name": "BackEND",
+  "version": "1.0.0",
+  "description": "Assignment 2 API project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.0",
+    "express": "^4.19.0"
+  }
+}

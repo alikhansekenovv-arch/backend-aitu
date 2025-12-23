@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Random User Info</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+
+    <h1>Random User Info</h1>
+
+    <button id="loadUserBtn">Get random user</button>
+
+    <div id="status"></div>
+
+    <h2>User</h2>
+    <div id="userContainer"></div>
+
+    <h2>Country & Currency</h2>
+    <div id="countryContainer"></div>
+
+    <h2>News</h2>
+    <div id="newsContainer"></div>
+
+    <script>
+      const loadUserBtn = document.getElementById('loadUserBtn');
+      const statusDiv = document.getElementById('status');
+      const userDiv = document.getElementById('userContainer');
+      const countryDiv = document.getElementById('countryContainer');
+      const newsDiv = document.getElementById('newsContainer');
+
+      async function loadUserData() {
+        try {
+          statusDiv.textContent = 'Loading...';
+          userDiv.innerHTML = '';
+          countryDiv.innerHTML = '';
+          newsDiv.innerHTML = '';
+
+          const response = await fetch('/api/user-data');
+          if (!response.ok) {
+            throw new Error('Server error');
+          }
+
+          const data = await response.json();
+          statusDiv.textContent = '';
+
+          showUser(data.user);
+          showCountryAndRates(data.country, data.exchangeRates);
+          showNews(data.news);
+        } catch (err) {
+          console.error(err);
+          statusDiv.textContent = 'Error while loading data';
+        }
+      }
+
+      function showUser(user) {
+        const dob = new Date(user.dateOfBirth).toLocaleDateString();
+        userDiv.innerHTML = `
+          <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+          <p><strong>Gender:</strong> ${user.gender}</p>
+          <p><strong>Age:</strong> ${user.age}</p>
+          <p><strong>Date of birth:</strong> ${dob}</p>
+          <p><strong>City:</strong> ${user.city}</p>
+          <p><strong>Country:</strong> ${user.country}</p>
+          <p><strong>Address:</strong> ${user.fullAddress}</p>
+          <p><img src="${user.profilePicture}" alt="User picture"></p>
+        `;
+      }
+
+      function showCountryAndRates(country, rates) {
+        const languages = country.languages && country.languages.length
+          ? country.languages.join(', ')
+          : 'N/A';
+
+        let rateLines = '';
+        if (rates && rates.base) {
+          if (rates.toUSD) {
+            rateLines += `<p>1 ${rates.base} = ${rates.toUSD.toFixed(2)} USD</p>`;
+          }
+          if (rates.toKZT) {
+            rateLines += `<p>1 ${rates.base} = ${rates.toKZT.toFixed(2)} KZT</p>`;
+          }
+        }
+
+        countryDiv.innerHTML = `
+          <p><strong>Country:</strong> ${country.countryName}</p>
+          <p><strong>Capital:</strong> ${country.capital}</p>
+          <p><strong>Languages:</strong> ${languages}</p>
+          <p><strong>Currency:</strong> ${country.currency.code} (${country.currency.name}) ${country.currency.symbol}</p>
+          ${rateLines || '<p>No exchange rate data</p>'}
+          ${
+            country.flagUrl
+              ? `<p><img src="${country.flagUrl}" alt="Flag" style="max-width:150px;"></p>`
+              : ''
+          }
+        `;
+      }
+
+      function showNews(news) {
+        if (!news || news.length === 0) {
+          newsDiv.innerHTML = '<p>No news found.</p>';
+          return;
+        }
+
+        const items = news
+          .map((item) => {
+            return `
+              <div style="margin-bottom:16px;">
+                <p><strong>${item.title}</strong></p>
+                <p>${item.description || ''}</p>
+                ${item.imageUrl ? `<p><img src="${item.imageUrl}" alt="News image" style="max-width:200px;"></p>` : ''}
+                <p><em>${item.sourceName || ''}</em></p>
+                <p><a href="${item.url}" target="_blank">Read more</a></p>
+              </div>
+            `;
+          })
+          .join('');
+
+        newsDiv.innerHTML = items;
+      }
+
+      loadUserBtn.addEventListener('click', loadUserData);
+    </script>
+  </body>
+</html>
